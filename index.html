@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <meta name="theme-color" content="#0a0e1a" />
+  <meta name="description" content="Gestão de manutenção para Renault Mégane 3 1.5 dCi" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Check Mégane 3</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-primary: #080c18;
+      --bg-secondary: #0d1226;
+      --bg-card: #111827;
+      --bg-card-hover: #1a2436;
+      --border: #1e2d4a;
+      --border-bright: #2a3f63;
+      --accent-blue: #2563eb;
+      --accent-blue-bright: #3b82f6;
+      --accent-cyan: #06b6d4;
+      --accent-orange: #f97316;
+      --accent-red: #ef4444;
+      --accent-green: #22c55e;
+      --accent-yellow: #eab308;
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-muted: #475569;
+      --font-display: 'Rajdhani', sans-serif;
+      --font-body: 'Inter', sans-serif;
+      --radius: 12px;
+      --radius-sm: 8px;
+      --shadow: 0 4px 24px rgba(0,0,0,0.4);
+      --glow-blue: 0 0 20px rgba(37,99,235,0.3);
+      --glow-green: 0 0 20px rgba(34,197,94,0.3);
+      --glow-red: 0 0 20px rgba(239,68,68,0.3);
+      --glow-yellow: 0 0 20px rgba(234,179,8,0.3);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { height: 100%; }
+    body {
+      font-family: var(--font-body);
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+    /* ---- LAYOUT ---- */
+    #app { display: flex; flex-direction: column; min-height: 100vh; }
+    .screen { display: none; flex: 1; flex-direction: column; padding-bottom: 80px; }
+    .screen.active { display: flex; }
+    /* ---- TOPBAR ---- */
+    .topbar {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(8,12,24,0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 20px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .topbar-brand {
+      font-family: var(--font-display);
+      font-size: 1.4rem; font-weight: 700;
+      letter-spacing: 0.05em;
+      background: linear-gradient(135deg, var(--accent-blue-bright), var(--accent-cyan));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .topbar-sub { font-size: 0.7rem; color: var(--text-muted); letter-spacing: 0.1em; text-transform: uppercase; }
+    .topbar-right { display: flex; gap: 8px; }
+    .icon-btn {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: var(--bg-card); border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: all 0.2s; color: var(--text-secondary); font-size: 1rem;
+    }
+    .icon-btn:hover { background: var(--bg-card-hover); border-color: var(--accent-blue); }
+    /* ---- BOTTOM NAV ---- */
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+      background: rgba(8,12,24,0.97);
+      backdrop-filter: blur(16px);
+      border-top: 1px solid var(--border);
+      display: flex; height: 72px;
+    }
+    .nav-item {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 4px;
+      cursor: pointer; transition: all 0.2s;
+      position: relative; color: var(--text-muted); font-size: 0.62rem;
+      letter-spacing: 0.05em; text-transform: uppercase; font-weight: 500;
+    }
+    .nav-item svg { width: 20px; height: 20px; transition: all 0.2s; }
+    .nav-item.active { color: var(--accent-blue-bright); }
+    .nav-item.active svg { filter: drop-shadow(0 0 6px rgba(59,130,246,0.6)); }
+    .nav-item.active::before {
+      content: ''; position: absolute; top: 0; left: 20%; right: 20%;
+      height: 2px; background: linear-gradient(90deg, transparent, var(--accent-blue-bright), transparent);
+      border-radius: 0 0 2px 2px;
+    }
+    /* ---- SCROLL CONTAINER ---- */
+    .scroll-content { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+    .page-pad { padding: 20px; }
+    /* ---- CARDS ---- */
+    .card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 16px;
+      transition: all 0.2s;
+    }
+    .card:hover { border-color: var(--border-bright); }
+    .card-title { font-family: var(--font-display); font-size: 0.8rem; font-weight: 600; color: var(--text-muted); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 12px; }
+    /* ---- STATUS BADGES ---- */
+    .badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 3px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.05em;
+    }
+    .badge-green { background: rgba(34,197,94,0.12); color: var(--accent-green); border: 1px solid rgba(34,197,94,0.25); }
+    .badge-yellow { background: rgba(234,179,8,0.12); color: var(--accent-yellow); border: 1px solid rgba(234,179,8,0.25); }
+    .badge-red { background: rgba(239,68,68,0.12); color: var(--accent-red); border: 1px solid rgba(239,68,68,0.25); }
+    .badge-blue { background: rgba(59,130,246,0.12); color: var(--accent-blue-bright); border: 1px solid rgba(59,130,246,0.25); }
+    /* ---- SECTION HEADER ---- */
+    .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .section-title { font-family: var(--font-display); font-size: 1.1rem; font-weight: 700; letter-spacing: 0.04em; }
+    .section-action { font-size: 0.75rem; color: var(--accent-blue-bright); cursor: pointer; font-weight: 500; }
+    /* ---- DASHBOARD ---- */
+    .hero-km {
+      background: linear-gradient(135deg, #0d1a35, #0a1628);
+      border: 1px solid var(--border-bright);
+      border-radius: var(--radius);
+      padding: 24px 20px;
+      text-align: center;
+      position: relative; overflow: hidden;
+      margin-bottom: 16px;
+    }
+    .hero-km::before {
+      content: ''; position: absolute; top: -40px; right: -40px;
+      width: 160px; height: 160px;
+      background: radial-gradient(circle, rgba(37,99,235,0.2), transparent 70%);
+      pointer-events: none;
+    }
+    .km-label { font-size: 0.72rem; color: var(--text-muted); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 8px; }
+    .km-value {
+      font-family: var(--font-display); font-size: 3.5rem; font-weight: 700;
+      line-height: 1; letter-spacing: 0.02em;
+      background: linear-gradient(180deg, #fff, #94a3b8);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .km-unit { font-size: 1.2rem; font-weight: 500; }
+    .km-since { font-size: 0.8rem; color: var(--text-secondary); margin-top: 8px; }
+    .km-input-row { display: flex; gap: 8px; margin-top: 12px; align-items: center; justify-content: center; }
+    .km-input {
+      background: rgba(255,255,255,0.06); border: 1px solid var(--border-bright);
+      border-radius: var(--radius-sm); padding: 8px 12px;
+      font-size: 0.9rem; color: var(--text-primary); font-family: var(--font-display);
+      width: 140px; text-align: center; outline: none; letter-spacing: 0.05em;
+    }
+    .km-input:focus { border-color: var(--accent-blue); box-shadow: var(--glow-blue); }
+    .btn-sm {
+      padding: 8px 16px; border-radius: var(--radius-sm);
+      font-size: 0.8rem; font-weight: 600; cursor: pointer;
+      border: none; transition: all 0.2s; font-family: var(--font-display); letter-spacing: 0.05em;
+    }
+    .btn-primary { background: var(--accent-blue); color: white; }
+    .btn-primary:hover { background: #1d4ed8; box-shadow: var(--glow-blue); }
+    .btn-danger { background: var(--accent-red); color: white; }
+    .btn-success { background: var(--accent-green); color: #000; font-weight: 700; }
+    .btn-outline {
+      background: transparent; color: var(--text-secondary);
+      border: 1px solid var(--border); 
+    }
+    .btn-outline:hover { border-color: var(--accent-blue); color: var(--accent-blue-bright); }
+    /* ---- ALERT ITEMS ---- */
+    .alert-list { display: flex; flex-direction: column; gap: 10px; }
+    .alert-item {
+      display: flex; align-items: center; gap: 12px;
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 12px 14px;
+      transition: all 0.2s;
+    }
+    .alert-item:hover { background: var(--bg-card-hover); }
+    .alert-dot {
+      width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+      box-shadow: 0 0 8px currentColor;
+    }
+    .alert-dot.red { background: var(--accent-red); color: var(--accent-red); }
+    .alert-dot.yellow { background: var(--accent-yellow); color: var(--accent-yellow); }
+    .alert-dot.green { background: var(--accent-green); color: var(--accent-green); }
+    .alert-text { flex: 1; }
+    .alert-name { font-size: 0.88rem; font-weight: 500; color: var(--text-primary); }
+    .alert-detail { font-size: 0.75rem; color: var(--text-secondary); margin-top: 2px; }
+    .alert-badge { flex-shrink: 0; }
+    /* ---- QUICK STATS ---- */
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+    .stat-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 14px 12px; text-align: center;
+    }
+    .stat-val { font-family: var(--font-display); font-size: 1.6rem; font-weight: 700; }
+    .stat-lbl { font-size: 0.7rem; color: var(--text-muted); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 4px; }
+    /* ---- PROGRESS BAR ---- */
+    .progress-wrap { margin-bottom: 6px; }
+    .progress-header { display: flex; justify-content: space-between; font-size: 0.75rem; margin-bottom: 6px; color: var(--text-secondary); }
+    .progress-bar { height: 6px; background: rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden; }
+    .progress-fill { height: 100%; border-radius: 3px; transition: width 0.5s ease; }
+    .progress-fill.green { background: linear-gradient(90deg, var(--accent-green), #16a34a); }
+    .progress-fill.yellow { background: linear-gradient(90deg, var(--accent-yellow), #ca8a04); }
+    .progress-fill.red { background: linear-gradient(90deg, var(--accent-red), #dc2626); box-shadow: 0 0 8px rgba(239,68,68,0.4); }
+    /* ---- CHECKLIST ---- */
+    .checklist-category {
+      margin-bottom: 20px;
+    }
+    .cat-header {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 10px; padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    .cat-icon { font-size: 1.1rem; }
+    .cat-title { font-family: var(--font-display); font-size: 1rem; font-weight: 700; letter-spacing: 0.04em; }
+    .cat-count { font-size: 0.72rem; color: var(--text-muted); margin-left: auto; }
+    .check-item {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 12px 14px; border-radius: var(--radius-sm);
+      background: var(--bg-card); border: 1px solid var(--border);
+      margin-bottom: 8px; cursor: pointer; transition: all 0.2s;
+    }
+    .check-item:hover { background: var(--bg-card-hover); border-color: var(--border-bright); }
+    .check-item.done { opacity: 0.55; }
+    .check-item.overdue { border-left: 3px solid var(--accent-red); }
+    .check-item.warning { border-left: 3px solid var(--accent-yellow); }
+    .check-box {
+      width: 20px; height: 20px; border-radius: 5px;
+      border: 2px solid var(--border-bright); flex-shrink: 0; margin-top: 1px;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s; background: transparent;
+    }
+    .check-item.done .check-box { background: var(--accent-green); border-color: var(--accent-green); }
+    .check-info { flex: 1; }
+    .check-name { font-size: 0.88rem; font-weight: 500; color: var(--text-primary); }
+    .check-meta { font-size: 0.73rem; color: var(--text-secondary); margin-top: 3px; }
+    .check-critical { font-size: 0.68rem; color: var(--accent-red); font-weight: 600; letter-spacing: 0.05em; margin-top: 2px; }
+    .check-badge { flex-shrink: 0; }
+    /* ---- FORM ---- */
+    .form-group { margin-bottom: 16px; }
+    .form-label { font-size: 0.78rem; color: var(--text-secondary); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 8px; display: block; font-weight: 500; }
+    .form-input, .form-textarea, .form-select {
+      width: 100%; background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 11px 14px;
+      font-size: 0.9rem; color: var(--text-primary); font-family: var(--font-body);
+      outline: none; transition: all 0.2s;
+    }
+    .form-input:focus, .form-textarea:focus, .form-select:focus {
+      border-color: var(--accent-blue); box-shadow: 0 0 0 3px rgba(37,99,235,0.15);
+    }
+    .form-textarea { min-height: 80px; resize: vertical; }
+    .form-select { appearance: none; cursor: pointer; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .btn-full { width: 100%; padding: 14px; font-size: 1rem; border-radius: var(--radius-sm); font-family: var(--font-display); font-weight: 700; letter-spacing: 0.08em; cursor: pointer; border: none; transition: all 0.2s; }
+    .btn-full.primary { background: linear-gradient(135deg, var(--accent-blue), #1d4ed8); color: white; }
+    .btn-full.primary:hover { box-shadow: var(--glow-blue); transform: translateY(-1px); }
+    .checks-mini { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; max-height: 240px; overflow-y: auto; }
+    .check-mini-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 12px; background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s;
+    }
+    .check-mini-item.selected { background: rgba(37,99,235,0.12); border-color: var(--accent-blue); }
+    .check-mini-cb {
+      width: 18px; height: 18px; border-radius: 4px; border: 2px solid var(--border-bright);
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .check-mini-item.selected .check-mini-cb { background: var(--accent-blue); border-color: var(--accent-blue); }
+    .check-mini-label { font-size: 0.82rem; color: var(--text-primary); }
+    /* ---- HISTORY ---- */
+    .hist-item {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 16px; margin-bottom: 12px;
+      transition: all 0.2s;
+    }
+    .hist-item:hover { border-color: var(--border-bright); }
+    .hist-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px; }
+    .hist-date { font-family: var(--font-display); font-size: 1rem; font-weight: 700; }
+    .hist-km { font-size: 0.8rem; color: var(--text-secondary); margin-top: 2px; }
+    .hist-cost { font-family: var(--font-display); font-size: 1.1rem; font-weight: 700; color: var(--accent-cyan); }
+    .hist-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+    .hist-tag { font-size: 0.7rem; padding: 3px 9px; border-radius: 20px; background: rgba(37,99,235,0.1); color: var(--accent-blue-bright); border: 1px solid rgba(37,99,235,0.2); }
+    .hist-notes { font-size: 0.8rem; color: var(--text-secondary); line-height: 1.5; }
+    .hist-empty { text-align: center; padding: 48px 20px; color: var(--text-muted); }
+    .hist-empty-icon { font-size: 3rem; margin-bottom: 12px; }
+    /* ---- PARTS LIST ---- */
+    .part-item {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 14px; margin-bottom: 10px;
+    }
+    .part-name { font-weight: 600; font-size: 0.9rem; margin-bottom: 4px; }
+    .part-spec { font-size: 0.8rem; color: var(--accent-cyan); font-family: var(--font-display); letter-spacing: 0.04em; }
+    .part-note { font-size: 0.75rem; color: var(--text-muted); margin-top: 5px; line-height: 1.4; }
+    /* ---- RESET GUIDE ---- */
+    .step-item {
+      display: flex; gap: 14px; align-items: flex-start;
+      padding: 14px; background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); margin-bottom: 8px;
+    }
+    .step-num {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-display); font-size: 0.85rem; font-weight: 700;
+      flex-shrink: 0; color: white;
+    }
+    .step-text { font-size: 0.85rem; line-height: 1.5; }
+    .step-text strong { color: var(--accent-cyan); }
+    /* ---- MODAL ---- */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; z-index: 200;
+      background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
+      align-items: flex-end; justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--bg-secondary); border: 1px solid var(--border-bright);
+      border-radius: var(--radius) var(--radius) 0 0;
+      padding: 24px 20px; width: 100%; max-width: 600px;
+      max-height: 90vh; overflow-y: auto;
+      animation: slideUp 0.25s ease;
+    }
+    @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+    .modal-title { font-family: var(--font-display); font-size: 1.2rem; font-weight: 700; letter-spacing: 0.04em; }
+    .modal-close { width: 30px; height: 30px; border-radius: 50%; background: var(--bg-card); border: 1px solid var(--border); cursor: pointer; color: var(--text-secondary); font-size: 1rem; display: flex; align-items: center; justify-content: center; }
+    /* ---- TOAST ---- */
+    .toast {
+      position: fixed; top: 80px; left: 50%; transform: translateX(-50%);
+      background: var(--bg-card); border: 1px solid var(--border-bright);
+      border-radius: var(--radius-sm); padding: 12px 20px;
+      font-size: 0.85rem; z-index: 300; white-space: nowrap;
+      box-shadow: var(--shadow); animation: fadeInDown 0.25s ease;
+      display: none;
+    }
+    .toast.show { display: block; }
+    @keyframes fadeInDown { from { opacity: 0; transform: translateX(-50%) translateY(-10px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+    /* ---- CHIP FILTERS ---- */
+    .filter-row { display: flex; gap: 8px; padding: 16px 20px 8px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .filter-row::-webkit-scrollbar { display: none; }
+    .chip {
+      padding: 6px 14px; border-radius: 20px; font-size: 0.76rem; font-weight: 600;
+      border: 1px solid var(--border); background: var(--bg-card); color: var(--text-secondary);
+      cursor: pointer; white-space: nowrap; transition: all 0.2s; letter-spacing: 0.04em;
+    }
+    .chip.active { background: var(--accent-blue); border-color: var(--accent-blue); color: white; }
+    /* ---- SCROLLBAR ---- */
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 2px; }
+    /* ---- MISC ---- */
+    .divider { height: 1px; background: var(--border); margin: 16px 0; }
+    .text-muted { color: var(--text-muted); }
+    .text-sm { font-size: 0.8rem; }
+    .mt-8 { margin-top: 8px; } .mt-12 { margin-top: 12px; } .mt-16 { margin-top: 16px; } .mt-20 { margin-top: 20px; }
+    .warning-box {
+      background: rgba(234,179,8,0.08); border: 1px solid rgba(234,179,8,0.25);
+      border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 16px;
+      font-size: 0.82rem; color: var(--accent-yellow); line-height: 1.5;
+    }
+    .info-box {
+      background: rgba(6,182,212,0.08); border: 1px solid rgba(6,182,212,0.2);
+      border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 16px;
+      font-size: 0.82rem; color: var(--accent-cyan); line-height: 1.5;
+    }
+    .del-btn { padding: 5px 10px; font-size: 0.72rem; border-radius: 6px; background: rgba(239,68,68,0.1); color: var(--accent-red); border: 1px solid rgba(239,68,68,0.2); cursor: pointer; }
+    .del-btn:hover { background: rgba(239,68,68,0.2); }
+  </style>
+</head>
+<body>
+<div id="app">
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div>
+      <div class="topbar-brand">⚙ CHECK MÉGANE 3</div>
+      <div class="topbar-sub">Renault Mégane 3 · 1.5 dCi · K9K · 95cv</div>
+    </div>
+    <div class="topbar-right">
+      <div class="icon-btn" onclick="exportCSV()" title="Exportar CSV">📤</div>
+      <div class="icon-btn" onclick="showToast('Notificações ativas ✓')">🔔</div>
+    </div>
+  </div>
+
+  <!-- SCREEN: DASHBOARD -->
+  <div id="screen-home" class="screen active">
+    <div class="scroll-content">
+      <div class="page-pad">
+        <!-- Hero KM -->
+        <div class="hero-km">
+          <div class="km-label">Quilometragem Atual</div>
+          <div class="km-value" id="km-display">—<span class="km-unit"> km</span></div>
+          <div class="km-since" id="km-since-text">Atualize a quilometragem abaixo</div>
+          <div class="km-input-row">
+            <input type="number" class="km-input" id="km-input" placeholder="Ex: 125000" />
+            <button class="btn-sm btn-primary" onclick="updateKm()">Atualizar</button>
+          </div>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-val" id="stat-since-oil" style="color:var(--accent-cyan)">—</div>
+            <div class="stat-lbl">km desde óleo</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-val" id="stat-maintenance-count" style="color:var(--accent-green)">0</div>
+            <div class="stat-lbl">manutenções</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-val" id="stat-next-service" style="color:var(--accent-yellow)">—</div>
+            <div class="stat-lbl">próx. revisão km</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-val" id="stat-total-cost" style="color:var(--accent-orange)">0€</div>
+            <div class="stat-lbl">custo total</div>
+          </div>
+        </div>
+
+        <!-- Alerts -->
+        <div class="section-header">
+          <div class="section-title">🚨 Alertas de Manutenção</div>
+        </div>
+        <div class="alert-list" id="alert-list">
+          <div style="text-align:center;color:var(--text-muted);padding:24px;font-size:0.85rem;">
+            Atualize a quilometragem para ver os alertas
+          </div>
+        </div>
+
+        <!-- Belt Warning -->
+        <div class="warning-box mt-16">
+          ⚠️ <strong>CORREIA DE DISTRIBUIÇÃO:</strong> Componente crítico do motor 1.5 dCi K9K. 
+          Falha pode causar destruição total do motor. Verificar a cada <strong>60.000–90.000 km ou 5 anos</strong>.
+        </div>
+
+        <!-- Next Service Progress -->
+        <div class="card mt-16">
+          <div class="card-title">Próximos Serviços</div>
+          <div id="service-progress-list"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN: CHECKLIST -->
+  <div id="screen-checklist" class="screen">
+    <div class="filter-row" id="checklist-filters">
+      <div class="chip active" onclick="filterChecklist('all', this)">Todos</div>
+      <div class="chip" onclick="filterChecklist('pendente', this)">Pendentes</div>
+      <div class="chip" onclick="filterChecklist('vencido', this)">Vencidos</div>
+      <div class="chip" onclick="filterChecklist('ok', this)">Em Dia</div>
+    </div>
+    <div class="scroll-content">
+      <div class="page-pad" id="checklist-content"></div>
+    </div>
+  </div>
+
+  <!-- SCREEN: ADD -->
+  <div id="screen-add" class="screen">
+    <div class="scroll-content">
+      <div class="page-pad">
+        <div class="section-title" style="margin-bottom:20px">📝 Registar Manutenção</div>
+        <div class="form-group">
+          <label class="form-label">Data</label>
+          <input type="date" class="form-input" id="add-date" />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Quilometragem</label>
+            <input type="number" class="form-input" id="add-km" placeholder="Ex: 125000" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Custo (€)</label>
+            <input type="number" class="form-input" id="add-cost" placeholder="0.00" step="0.01" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Oficina / Local</label>
+          <input type="text" class="form-input" id="add-garage" placeholder="Ex: Oficina João, Auto Renault Lisboa" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Itens realizados</label>
+          <div class="checks-mini" id="checks-select"></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Notas adicionais</label>
+          <textarea class="form-textarea" id="add-notes" placeholder="Observações, próximas verificações, peças usadas..."></textarea>
+        </div>
+        <button class="btn-full primary" onclick="saveMainenance()">💾 Guardar Manutenção</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN: HISTORY -->
+  <div id="screen-history" class="screen">
+    <div class="scroll-content">
+      <div class="page-pad">
+        <div class="section-header">
+          <div class="section-title">📋 Histórico</div>
+          <div class="section-action" onclick="exportCSV()">Exportar CSV</div>
+        </div>
+        <div id="history-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN: INFO -->
+  <div id="screen-info" class="screen">
+    <div class="scroll-content">
+      <div class="page-pad">
+        <!-- Tabs -->
+        <div style="display:flex;gap:8px;margin-bottom:20px;border-bottom:1px solid var(--border);padding-bottom:12px;">
+          <div class="chip active" id="tab-parts" onclick="switchInfoTab('parts')">Peças</div>
+          <div class="chip" id="tab-reset" onclick="switchInfoTab('reset')">Reset Serviço</div>
+          <div class="chip" id="tab-specs" onclick="switchInfoTab('specs')">Especificações</div>
+        </div>
+
+        <!-- Parts Tab -->
+        <div id="tab-content-parts">
+          <div class="info-box">ℹ️ Especificações oficiais para o motor K9K 95cv (Mégane 3 KZ1G 2010)</div>
+          <div id="parts-list"></div>
+        </div>
+
+        <!-- Reset Tab -->
+        <div id="tab-content-reset" style="display:none">
+          <div class="warning-box">⚠️ Apenas repor o indicador após troca de óleo realizada. Não repor sem fazer a manutenção.</div>
+          <div class="section-title" style="margin-bottom:12px">Reset Luz de Serviço (Óleo)</div>
+          <div id="reset-steps"></div>
+          <div class="divider"></div>
+          <div class="section-title" style="margin-bottom:12px;margin-top:4px">Reset via OBD2</div>
+          <div class="step-item">
+            <div class="step-num">A</div>
+            <div class="step-text">Ligar leitor OBD2 à tomada debaixo do tablier (lado esquerdo do condutor)</div>
+          </div>
+          <div class="step-item">
+            <div class="step-num">B</div>
+            <div class="step-text">Selecionar <strong>Renault → Mégane III → Service Interval</strong></div>
+          </div>
+          <div class="step-item">
+            <div class="step-num">C</div>
+            <div class="step-text">Executar função <strong>"Oil Service Reset"</strong> ou <strong>"Maintenance Reset"</strong></div>
+          </div>
+        </div>
+
+        <!-- Specs Tab -->
+        <div id="tab-content-specs" style="display:none">
+          <div class="card">
+            <div class="card-title">Motor</div>
+            <div id="specs-list"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav">
+    <div class="nav-item active" id="nav-home" onclick="navigateTo('home')">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+      Dashboard
+    </div>
+    <div class="nav-item" id="nav-checklist" onclick="navigateTo('checklist')">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+      Checklist
+    </div>
+    <div class="nav-item" id="nav-add" onclick="navigateTo('add')">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" d="M12 8v8M8 12h8"/></svg>
+      Registar
+    </div>
+    <div class="nav-item" id="nav-history" onclick="navigateTo('history')">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2"/></svg>
+      Histórico
+    </div>
+    <div class="nav-item" id="nav-info" onclick="navigateTo('info')">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+      Peças & Info
+    </div>
+  </nav>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
