@@ -10,6 +10,14 @@ const defaultData = {
   currentKm: 0,
   maintenances: [],    // array of maintenance records
   checklistState: {},  // checklistItem.id -> { done, lastKm, lastDate }
+  vehicle: {           // perfil do carro (VIN + dados do DUA)
+    vin: '',
+    powerKw: 81,
+    engineCode: '',
+    gearbox: 'Manual 6 velocidades',
+    tyreFront: 2.3,
+    tyreRear: 2.1
+  },
   version: 1
 };
 
@@ -250,30 +258,129 @@ const RESET_STEPS = [
   { step: 'Desligar e arrancar', detail: 'Desligar o contacto, aguardar 10 segundos, arrancar o carro. Confirmar que a luz de serviço apagou.' },
 ];
 
-const SPECS = [
-  { label: 'Versão', value: 'Mégane III Grand Tour (KZ1G)' },
-  { label: 'Motor', value: 'Renault K9K (836 ou 846 — confirmar na chapa do motor)' },
-  { label: 'Cilindrada', value: '1.461 cc (1.5 dCi)' },
-  { label: 'Potência', value: '110 cv (81 kW) @ 4.000 rpm' },
-  { label: 'Binário', value: '~240 Nm @ 1.750 rpm' },
-  { label: 'Alimentação', value: 'Injeção direta common rail' },
-  { label: 'Norma emissões', value: 'Euro 5' },
-  { label: 'Transmissão', value: 'Caixa manual 6 velocidades (normalmente TL4 na versão 110 cv)' },
+// ---- VEHICLE PROFILE (VIN) ----
+const VIN_MAKERS = { VF1: 'Renault', VF2: 'Renault', UU1: 'Dacia', VF3: 'Peugeot', VF7: 'Citroën' };
+const MEGANE3_BODIES = { BZ: 'Berlina 5 portas', DZ: 'Coupé', EZ: 'Coupé-Cabriolet', KZ: 'Grand Tour' };
+// Potências conhecidas do 1.5 dCi K9K no Mégane III (kW -> binário aproximado)
+const K9K_POWERS = { 63: '~200 Nm', 66: '~200 Nm', 70: '~200 Nm', 78: '~240 Nm', 81: '~240 Nm' };
+
+function decodeVin(vin) {
+  vin = (vin || '').toUpperCase().trim();
+  if (!vin) return { valid: false, empty: true };
+  if (!/^[A-HJ-NPR-Z0-9]{17}$/.test(vin)) {
+    return { valid: false, error: vin.length !== 17 ? `O VIN tem 17 caracteres (tem ${vin.length}).` : 'O VIN não usa as letras I, O ou Q.' };
+  }
+  const maker = VIN_MAKERS[vin.slice(0, 3)] || null;
+  const body = maker === 'Renault' ? MEGANE3_BODIES[vin.slice(3, 5)] || null : null;
+  return { valid: true, vin, maker, body, typeCode: vin.slice(3, 7), isMegane3: !!body };
+}
+
+function kwToCv(kw) { return Math.round(kw * 1.35962); }
+
+function vehicleSummary() {
+  const v = appData.vehicle || {};
+  const d = decodeVin(v.vin);
+  const cv = v.powerKw ? kwToCv(v.powerKw) : null;
+  return {
+    name: `Mégane 3${d.body ? ' ' + d.body : ''} 1.5 dCi${cv ? ' ' + cv + 'cv' : ''}`,
+    sub: [d.body, '1.5 dCi', cv ? cv + 'cv' : null].filter(Boolean).join(' · ')
+  };
+}
+
+function getSpecs() {
+  const v = appData.vehicle || {};
+  const d = decodeVin(v.vin);
+  const cv = v.powerKw ? kwToCv(v.powerKw) : null;
+  const torque = K9K_POWERS[v.powerKw];
+  return [
+    { label: 'Versão', value: d.valid && d.isMegane3 ? `Mégane III ${d.body} (${d.typeCode})` : 'Mégane III' },
+    { label: 'Motor', value: v.engineCode ? escapeHtml(v.engineCode) : 'Renault K9K (ver código na chapa do motor)' },
+    { label: 'Cilindrada', value: '1.461 cc (1.5 dCi)' },
+    { label: 'Potência', value: cv ? `${cv} cv (${v.powerKw} kW)` : '—' },
+    { label: 'Binário', value: torque || '—' },
+    { label: 'Alimentação', value: 'Injeção direta common rail' },
+    { label: 'Transmissão', value: v.gearbox ? escapeHtml(v.gearbox) : '—' },
   { label: 'Caixa de óleo motor', value: '4,5L (com filtro)' },
   { label: 'Óleo da caixa de velocidades', value: '~2,1L SAE 75W-80' },
   { label: 'Sistema de arrefecimento', value: '~6L Glaceol RX Type D' },
   { label: 'Depósito combustível', value: '60L' },
   { label: 'Pneus (standard)', value: '205/55 R16 ou 195/65 R15' },
-  { label: 'Pressão pneus (frente)', value: '2.3 bar (a frio)' },
-  { label: 'Pressão pneus (trás)', value: '2.1 bar (a frio)' },
-];
+    { label: 'Pressão pneus (frente)', value: v.tyreFront ? `${v.tyreFront} bar (a frio)` : '—' },
+    { label: 'Pressão pneus (trás)', value: v.tyreRear ? `${v.tyreRear} bar (a frio)` : '—' },
+  ];
+}
+
+function itemNote(item) {
+  if (item.id !== 'tyre_pressure') return item.note;
+  const v = appData.vehicle || {};
+  return `Dianteiros: ${v.tyreFront || '?'} bar · Traseiros: ${v.tyreRear || '?'} bar (a frio). Ver etiqueta na porta do condutor. Verificar o pneu sobressalente`;
+}
+
+function renderVehicleHeader() {
+  const s = vehicleSummary();
+  document.getElementById('topbar-sub').textContent = s.sub;
+  const el = document.getElementById('parts-car-name');
+  if (el) el.textContent = s.name;
+}
+
+function fillVehicleForm() {
+  const v = appData.vehicle || {};
+  document.getElementById('car-vin').value = v.vin || '';
+  document.getElementById('car-kw').value = v.powerKw || '';
+  document.getElementById('car-engine').value = v.engineCode || '';
+  document.getElementById('car-gearbox').value = v.gearbox || '';
+  document.getElementById('car-tyre-front').value = v.tyreFront || '';
+  document.getElementById('car-tyre-rear').value = v.tyreRear || '';
+  previewVin(); previewKw();
+}
+
+function previewVin() {
+  const d = decodeVin(document.getElementById('car-vin').value);
+  const el = document.getElementById('car-vin-result');
+  if (d.empty) { el.innerHTML = ''; return; }
+  if (!d.valid) { el.innerHTML = `<span style="color:var(--accent-yellow)">⚠️ ${d.error}</span>`; return; }
+  if (!d.maker) { el.innerHTML = '<span style="color:var(--accent-yellow)">⚠️ Fabricante não reconhecido.</span>'; return; }
+  if (!d.isMegane3) {
+    el.innerHTML = `<span style="color:var(--accent-yellow)">⚠️ ${d.maker}, mas não parece um Mégane III. A app foi feita para o Mégane III: confirme os intervalos de manutenção.</span>`;
+    return;
+  }
+  el.innerHTML = `<span style="color:var(--accent-green)">✓ ${d.maker} Mégane III ${d.body}</span> <span class="text-muted">· tipo ${d.typeCode}</span>`;
+}
+
+function previewKw() {
+  const kw = parseInt(document.getElementById('car-kw').value);
+  const el = document.getElementById('car-kw-result');
+  if (!kw) { el.textContent = ''; return; }
+  el.textContent = `= ${kwToCv(kw)} cv` + (K9K_POWERS[kw] ? '' : ' · potência pouco habitual no 1.5 dCi');
+}
+
+function saveVehicle() {
+  const vinRaw = document.getElementById('car-vin').value.trim().toUpperCase();
+  const d = decodeVin(vinRaw);
+  if (vinRaw && !d.valid) { showToast('⚠️ VIN inválido'); return; }
+  const num = id => parseFloat(document.getElementById(id).value) || null;
+  appData.vehicle = {
+    vin: vinRaw,
+    powerKw: parseInt(document.getElementById('car-kw').value) || null,
+    engineCode: document.getElementById('car-engine').value.trim().toUpperCase(),
+    gearbox: document.getElementById('car-gearbox').value,
+    tyreFront: num('car-tyre-front'),
+    tyreRear: num('car-tyre-rear')
+  };
+  saveData(appData);
+  renderVehicleHeader();
+  renderInfo();
+  showToast('✅ Dados do carro guardados!');
+}
 
 // ---- STORAGE ----
 function loadData() {
   try {
     const raw = localStorage.getItem(DB_KEY);
-    return raw ? { ...defaultData, ...JSON.parse(raw) } : { ...defaultData };
-  } catch { return { ...defaultData }; }
+    if (!raw) return { ...defaultData, vehicle: { ...defaultData.vehicle } };
+    const data = JSON.parse(raw);
+    return { ...defaultData, ...data, vehicle: { ...defaultData.vehicle, ...(data.vehicle || {}) } };
+  } catch { return { ...defaultData, vehicle: { ...defaultData.vehicle } }; }
 }
 
 function saveData(data) {
@@ -612,7 +719,7 @@ function openCheckModal(itemId) {
         <div class="modal-close" onclick="this.closest('.modal-overlay').remove()">✕</div>
       </div>
       ${item.critical ? '<div class="warning-box">⚠️ COMPONENTE CRÍTICO DO MOTOR — consultar mecânico especializado</div>' : ''}
-      <div class="info-box">${item.note}</div>
+      <div class="info-box">${itemNote(item)}</div>
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">Última manutenção (km)${item.intervalKm ? '' : ' — opcional'}</label>
@@ -797,7 +904,9 @@ function renderInfo() {
   `).join('');
   
   // Specs
-  document.getElementById('specs-list').innerHTML = SPECS.map(s => `
+  renderVehicleHeader();
+  fillVehicleForm();
+  document.getElementById('specs-list').innerHTML = getSpecs().map(s => `
     <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:0.83rem;">
       <span style="color:var(--text-secondary)">${s.label}</span>
       <span style="font-weight:500;text-align:right;max-width:60%">${s.value}</span>
@@ -806,7 +915,7 @@ function renderInfo() {
 }
 
 function switchInfoTab(tab) {
-  ['parts','reset','specs'].forEach(t => {
+  ['parts','reset','specs','car'].forEach(t => {
     document.getElementById('tab-content-' + t).style.display = t === tab ? 'block' : 'none';
     document.getElementById('tab-' + t).classList.toggle('active', t === tab);
   });
@@ -855,7 +964,8 @@ function importBackup(input) {
       const data = JSON.parse(reader.result);
       if (!data || typeof data !== 'object' || !Array.isArray(data.maintenances) || typeof data.checklistState !== 'object') throw new Error();
       if (!confirm(`Restaurar backup com ${data.maintenances.length} registo(s)? Os dados atuais serão substituídos.`)) return;
-      appData = { ...defaultData, ...data, currentKm: parseInt(data.currentKm) || 0 };
+      appData = { ...defaultData, ...data, currentKm: parseInt(data.currentKm) || 0, vehicle: { ...defaultData.vehicle, ...(data.vehicle || {}) } };
+      renderVehicleHeader();
       saveData(appData);
       renderHistory();
       showToast('✅ Backup restaurado!');
@@ -884,6 +994,7 @@ function formatDate(dateStr) {
 
 // ---- INIT ----
 document.addEventListener('DOMContentLoaded', () => {
+  renderVehicleHeader();
   renderDashboard();
   
   // Enter key on km input
