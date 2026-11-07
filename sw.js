@@ -1,6 +1,7 @@
 // Check Mégane 3 — Service Worker (PWA Offline Support)
-const CACHE = 'megane3-v1';
-const ASSETS = ['./', './index.html', './app.js', './manifest.json'];
+// Mudar a versão sempre que os ficheiros da app mudarem.
+const CACHE = 'megane3-v2';
+const ASSETS = ['./', './index.html', './app.js', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
@@ -8,16 +9,27 @@ self.addEventListener('install', e => {
 });
 
 self.addEventListener('activate', e => {
-  e.waitUntil(caches.keys().then(keys => 
+  e.waitUntil(caches.keys().then(keys =>
     Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
   ));
   self.clients.claim();
 });
 
+// Rede primeiro (para receber atualizações), cache como alternativa offline.
 self.addEventListener('fetch', e => {
+  if (e.request.method !== 'GET') return;
+  const sameOrigin = new URL(e.request.url).origin === self.location.origin;
   e.respondWith(
-    caches.match(e.request).then(cached => 
-      cached || fetch(e.request).catch(() => caches.match('./index.html'))
-    )
+    fetch(e.request)
+      .then(res => {
+        if (sameOrigin && res.ok) {
+          const copy = res.clone();
+          caches.open(CACHE).then(c => c.put(e.request, copy));
+        }
+        return res;
+      })
+      .catch(() => caches.match(e.request).then(cached =>
+        cached || (e.request.mode === 'navigate' ? caches.match('./index.html') : Response.error())
+      ))
   );
 });

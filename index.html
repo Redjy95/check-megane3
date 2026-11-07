@@ -2,7 +2,7 @@
 <html lang="pt">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#0a0e1a" />
   <meta name="description" content="Gestão de manutenção para Renault Mégane 3 1.5 dCi" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -383,7 +383,7 @@
     </div>
     <div class="topbar-right">
       <div class="icon-btn" onclick="exportCSV()" title="Exportar CSV">📤</div>
-      <div class="icon-btn" onclick="showToast('Notificações ativas ✓')">🔔</div>
+      <div class="icon-btn" onclick="exportBackup()" title="Backup dos dados">💾</div>
     </div>
   </div>
 
@@ -435,7 +435,7 @@
         <!-- Belt Warning -->
         <div class="warning-box mt-16">
           ⚠️ <strong>CORREIA DE DISTRIBUIÇÃO:</strong> Componente crítico do motor 1.5 dCi K9K. 
-          Falha pode causar destruição total do motor. Verificar a cada <strong>60.000–90.000 km ou 5 anos</strong>.
+          Falha pode causar destruição total do motor. A Renault indica <strong>~120.000 km ou 5 anos</strong> — a app avisa aos 90.000 km por segurança.
         </div>
 
         <!-- Next Service Progress -->
@@ -491,7 +491,7 @@
           <label class="form-label">Notas adicionais</label>
           <textarea class="form-textarea" id="add-notes" placeholder="Observações, próximas verificações, peças usadas..."></textarea>
         </div>
-        <button class="btn-full primary" onclick="saveMainenance()">💾 Guardar Manutenção</button>
+        <button class="btn-full primary" onclick="saveMaintenance()">💾 Guardar Manutenção</button>
       </div>
     </div>
   </div>
@@ -505,6 +505,15 @@
           <div class="section-action" onclick="exportCSV()">Exportar CSV</div>
         </div>
         <div id="history-list"></div>
+        <div class="card mt-16">
+          <div class="card-title">Backup dos dados</div>
+          <div class="text-muted text-sm" style="margin-bottom:12px">Os dados ficam só neste dispositivo. Faça backup regularmente para não os perder.</div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn-sm btn-primary" style="flex:1" onclick="exportBackup()">💾 Fazer backup</button>
+            <button class="btn-sm btn-primary" style="flex:1" onclick="document.getElementById('backup-file').click()">📂 Restaurar</button>
+          </div>
+          <input type="file" id="backup-file" accept="application/json,.json" style="display:none" onchange="importBackup(this)" />
+        </div>
       </div>
     </div>
   </div>
