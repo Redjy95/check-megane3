@@ -383,16 +383,59 @@ function renderDashboard() {
 
   // Stats
   document.getElementById('stat-maintenance-count').textContent = appData.maintenances.length;
+  document.getElementById('stat-maintenance-label').textContent = appData.maintenances.length === 1 ? 'manutenção' : 'manutenções';
   const totalCost = appData.maintenances.reduce((s, m) => s + (parseFloat(m.cost) || 0), 0);
   document.getElementById('stat-total-cost').textContent = totalCost.toFixed(0) + '€';
 
-  // Next service
-  const oilNext = getNextKm(MAINTENANCE_ITEMS.find(i => i.id === 'oil_change'));
-  document.getElementById('stat-next-service').textContent = oilNext ? oilNext.toLocaleString('pt-PT') : '—';
+  // Next service: km em falta (ou em atraso), com cor só quando há problema
+  const oilItem = MAINTENANCE_ITEMS.find(i => i.id === 'oil_change');
+  const oilRemaining = km ? getKmRemaining(oilItem) : null;
+  const nextEl = document.getElementById('stat-next-service');
+  const nextLbl = document.getElementById('stat-next-label');
+  nextEl.classList.remove('is-red', 'is-yellow');
+  if (oilRemaining === null) {
+    nextEl.textContent = '—';
+    nextLbl.textContent = 'até à revisão';
+  } else if (oilRemaining < 0) {
+    nextEl.textContent = Math.abs(oilRemaining).toLocaleString('pt-PT') + ' km';
+    nextLbl.textContent = 'revisão em atraso';
+    nextEl.classList.add('is-red');
+  } else {
+    nextEl.textContent = oilRemaining.toLocaleString('pt-PT') + ' km';
+    nextLbl.textContent = 'até à revisão';
+    if (oilRemaining <= oilItem.intervalKm * 0.15) nextEl.classList.add('is-yellow');
+  }
+
+  // Placeholder com o km atual
+  document.getElementById('km-input').placeholder = km ? km.toLocaleString('pt-PT') : 'Ex: 125000';
+
+  // Aviso da correia só quando está perto do prazo, em atraso ou sem dados
+  const beltStatus = getItemStatus(MAINTENANCE_ITEMS.find(i => i.id === 'timing_belt'));
+  document.getElementById('belt-warning').style.display = km && beltStatus !== 'ok' ? '' : 'none';
+
+  renderHeroSummary();
 
   // Alerts
   renderAlerts();
   renderServiceProgress();
+}
+
+function renderHeroSummary() {
+  const el = document.getElementById('hero-summary');
+  if (!appData.currentKm) { el.innerHTML = ''; return; }
+  const statuses = MAINTENANCE_ITEMS.map(getItemStatus);
+  const overdue = statuses.filter(s => s === 'overdue').length;
+  const warning = statuses.filter(s => s === 'warning').length;
+  const pill = (cls, text) => `<span class="summary-pill ${cls}" onclick="scrollToAlerts()"><span class="dot"></span>${text}</span>`;
+  const parts = [];
+  if (overdue) parts.push(pill('red', `${overdue} vencido${overdue > 1 ? 's' : ''}`));
+  if (warning) parts.push(pill('yellow', `${warning} atenção`));
+  if (!parts.length && statuses.some(s => s === 'ok')) parts.push(pill('green', 'Tudo em dia'));
+  el.innerHTML = parts.join('');
+}
+
+function scrollToAlerts() {
+  document.getElementById('alerts-title')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function renderAlerts() {
@@ -581,7 +624,7 @@ function openCheckModal(itemId) {
         </div>
       </div>
       ${item.intervalKm ? `<div class="text-muted text-sm" style="margin-bottom:12px">Próxima: ${((state.lastKm || appData.currentKm) + item.intervalKm).toLocaleString('pt-PT')} km (estimativa)</div>` : ''}
-      <button class="btn-full primary" onclick="saveCheckState('${itemId}')">💾 Guardar</button>
+      <button class="btn-full primary" onclick="saveCheckState('${itemId}')">Guardar</button>
     </div>
   `;
   document.body.appendChild(modal);
@@ -694,7 +737,7 @@ function renderHistory() {
         </div>
         <div style="text-align:right">
           <div class="hist-cost">${m.cost ? Number(m.cost).toFixed(2) + '€' : '—'}</div>
-          <button class="del-btn mt-8" onclick="deleteRecord('${escapeHtml(m.id)}')">🗑 Apagar</button>
+          <button class="del-btn mt-8" onclick="deleteRecord('${escapeHtml(m.id)}')">Apagar</button>
         </div>
       </div>
       <div class="hist-tags">
