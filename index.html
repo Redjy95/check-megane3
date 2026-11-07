@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#0a0e1a" />
-  <meta name="description" content="Gestão de manutenção para Renault Mégane 3 1.5 dCi" />
+  <meta name="description" content="Gestão de manutenção para Renault Mégane 3 Grand Tour 1.5 dCi 110cv" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>Check Mégane 3</title>
@@ -403,7 +403,7 @@
   <div class="topbar">
     <div>
       <div class="topbar-brand"><svg class="brand-icon" viewBox="-160 -160 320 320" aria-hidden="true"><g fill="#3b82f6"><circle r="92" fill="none" stroke="#3b82f6" stroke-width="34"/><g transform="rotate(0)"><rect x="-22" y="-150" width="44" height="50" rx="8"/><rect x="-22" y="100" width="44" height="50" rx="8"/><rect x="-150" y="-22" width="50" height="44" rx="8"/><rect x="100" y="-22" width="50" height="44" rx="8"/></g><g transform="rotate(45)"><rect x="-22" y="-150" width="44" height="50" rx="8"/><rect x="-22" y="100" width="44" height="50" rx="8"/><rect x="-150" y="-22" width="50" height="44" rx="8"/><rect x="100" y="-22" width="50" height="44" rx="8"/></g></g><path d="M-40 4 l28 30 l58 -66" fill="none" stroke="#22c55e" stroke-width="30" stroke-linecap="round" stroke-linejoin="round"/></svg>CHECK MÉGANE 3</div>
-      <div class="topbar-sub">1.5 dCi · K9K · 95cv</div>
+      <div class="topbar-sub" id="topbar-sub">Grand Tour · 1.5 dCi · 110cv</div>
     </div>
     <div class="topbar-right">
       <div class="icon-btn" onclick="exportCSV()" title="Exportar CSV" aria-label="Exportar CSV"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 00-2 2v14a2 2 0 002 2h12a2 2 0 002-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg></div>
@@ -548,15 +548,16 @@
     <div class="scroll-content">
       <div class="page-pad">
         <!-- Tabs -->
-        <div style="display:flex;gap:8px;margin-bottom:20px;border-bottom:1px solid var(--border);padding-bottom:12px;">
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;border-bottom:1px solid var(--border);padding-bottom:12px;">
           <div class="chip active" id="tab-parts" onclick="switchInfoTab('parts')">Peças</div>
-          <div class="chip" id="tab-reset" onclick="switchInfoTab('reset')">Reset Serviço</div>
+          <div class="chip" id="tab-reset" onclick="switchInfoTab('reset')">Reset</div>
           <div class="chip" id="tab-specs" onclick="switchInfoTab('specs')">Especificações</div>
+          <div class="chip" id="tab-car" onclick="switchInfoTab('car')">O meu carro</div>
         </div>
 
         <!-- Parts Tab -->
         <div id="tab-content-parts">
-          <div class="info-box">ℹ️ Especificações oficiais para o motor K9K 95cv (Mégane 3 KZ1G 2010)</div>
+          <div class="info-box">ℹ️ Especificações de referência para o <span id="parts-car-name">Mégane 3 1.5 dCi</span>. Confirmar no livro de manutenção.</div>
           <div id="parts-list"></div>
         </div>
 
@@ -579,6 +580,47 @@
             <div class="step-num">C</div>
             <div class="step-text">Executar função <strong>"Oil Service Reset"</strong> ou <strong>"Maintenance Reset"</strong></div>
           </div>
+        </div>
+
+        <!-- Car Tab -->
+        <div id="tab-content-car" style="display:none">
+          <div class="info-box">ℹ️ O VIN identifica a marca, o modelo e a carroçaria. A potência e o motor não vêm no VIN: copie-os do Documento Único (potência = campo P.2) e da etiqueta na porta do condutor.</div>
+          <div class="form-group">
+            <label class="form-label">VIN (nº de quadro)</label>
+            <input type="text" class="form-input" id="car-vin" maxlength="17" placeholder="Ex: VF1KZ1G0643131162" autocapitalize="characters" autocomplete="off" spellcheck="false" oninput="previewVin()" style="text-transform:uppercase;letter-spacing:0.05em" />
+            <div id="car-vin-result" class="text-sm" style="margin-top:8px"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Potência (kW)</label>
+              <input type="number" class="form-input" id="car-kw" placeholder="Ex: 81" oninput="previewKw()" />
+              <div id="car-kw-result" class="text-muted text-sm" style="margin-top:6px"></div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Código do motor</label>
+              <input type="text" class="form-input" id="car-engine" placeholder="Ex: K9K 836" autocapitalize="characters" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Caixa de velocidades</label>
+            <select class="form-input" id="car-gearbox">
+              <option value="">Não sei</option>
+              <option>Manual 5 velocidades</option>
+              <option>Manual 6 velocidades</option>
+              <option>Automática EDC</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Pneus frente (bar)</label>
+              <input type="number" class="form-input" id="car-tyre-front" step="0.1" placeholder="Ex: 2.3" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Pneus trás (bar)</label>
+              <input type="number" class="form-input" id="car-tyre-rear" step="0.1" placeholder="Ex: 2.1" />
+            </div>
+          </div>
+          <button class="btn-full primary" onclick="saveVehicle()">Guardar</button>
         </div>
 
         <!-- Specs Tab -->
