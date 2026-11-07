@@ -277,7 +277,8 @@ function loadData() {
 }
 
 function saveData(data) {
-  try { localStorage.setItem(DB_KEY, JSON.stringify(data)); } catch(e) {}
+  try { localStorage.setItem(DB_KEY, JSON.stringify(data)); }
+  catch (e) { showToast('⚠️ Não foi possível guardar os dados'); }
 }
 
 let appData = loadData();
@@ -386,7 +387,7 @@ function renderDashboard() {
   document.getElementById('stat-total-cost').textContent = totalCost.toFixed(0) + '€';
 
   // Next service
-  const oilNext = oilState?.lastKm ? oilState.lastKm + 15000 : null;
+  const oilNext = getNextKm(MAINTENANCE_ITEMS.find(i => i.id === 'oil_change'));
   document.getElementById('stat-next-service').textContent = oilNext ? oilNext.toLocaleString('pt-PT') : '—';
 
   // Alerts
@@ -431,7 +432,7 @@ function renderAlerts() {
     <div class="alert-item" onclick="navigateTo('checklist')">
       <div class="alert-dot ${a.status}"></div>
       <div class="alert-text">
-        <div class="alert-name">${a.item.critical ? '⚠️ ' : ''}${a.item.name}</div>
+        <div class="alert-name">${a.item.critical ? '⚠️ ' : ''}${escapeHtml(a.item.name)}</div>
         <div class="alert-detail">${a.detail}</div>
       </div>
       <div class="alert-badge">
@@ -574,7 +575,7 @@ function openCheckModal(itemId) {
       <div class="info-box">${item.note}</div>
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label">Última manutenção (km)</label>
+          <label class="form-label">Última manutenção (km)${item.intervalKm ? '' : ' — opcional'}</label>
           <input type="number" class="form-input" id="modal-km" value="${state.lastKm || ''}" placeholder="${appData.currentKm || 'km atual'}" />
         </div>
         <div class="form-group">
@@ -591,12 +592,15 @@ function openCheckModal(itemId) {
 }
 
 function saveCheckState(itemId) {
-  const km = parseInt(document.getElementById('modal-km')?.value);
+  const item = MAINTENANCE_ITEMS.find(i => i.id === itemId);
+  const km = parseInt(document.getElementById('modal-km')?.value) || 0;
   const date = document.getElementById('modal-date')?.value;
-  if (!km) { showToast('⚠️ Introduza a quilometragem'); return; }
-  
-  if (!appData.checklistState[itemId]) appData.checklistState[itemId] = {};
-  appData.checklistState[itemId] = { lastKm: km, lastDate: date, done: true };
+  if (item?.intervalKm && km < 1) { showToast('⚠️ Introduza a quilometragem'); return; }
+  if (!date) { showToast('⚠️ Introduza a data'); return; }
+
+  appData.checklistState[itemId] = { lastKm: km || null, lastDate: date, done: true };
+  // 6. manter o conta-km coerente
+  if (km > appData.currentKm) appData.currentKm = km;
   saveData(appData);
   document.querySelector('.modal-overlay')?.remove();
   renderChecklist();
@@ -647,6 +651,7 @@ function saveMainenance() {
     id: Date.now().toString(),
     date, km, cost, garage, notes,
     items: selectedItems,
+    itemIds: selectedItems.map(name => MAINTENANCE_ITEMS.find(i => i.name === name)?.id).filter(Boolean),
     createdAt: new Date().toISOString()
   };
   
@@ -688,27 +693,48 @@ function renderHistory() {
       <div class="hist-header">
         <div>
           <div class="hist-date">${formatDate(m.date)}</div>
-          <div class="hist-km">📍 ${m.km.toLocaleString('pt-PT')} km${m.garage ? ` · ${m.garage}` : ''}</div>
+          <div class="hist-km">📍 ${m.km.toLocaleString('pt-PT')} km${m.garage ? ` · ${escapeHtml(m.garage)}` : ''}</div>
         </div>
         <div style="text-align:right">
-          <div class="hist-cost">${m.cost ? m.cost.toFixed(2) + '€' : '—'}</div>
-          <button class="del-btn mt-8" onclick="deleteRecord('${m.id}')">🗑 Apagar</button>
+          <div class="hist-cost">${m.cost ? Number(m.cost).toFixed(2) + '€' : '—'}</div>
+          <button class="del-btn mt-8" onclick="deleteRecord('${escapeHtml(m.id)}')">🗑 Apagar</button>
         </div>
       </div>
       <div class="hist-tags">
-        ${m.items.map(i => `<span class="hist-tag">${i}</span>`).join('')}
+        ${m.items.map(i => `<span class="hist-tag">${escapeHtml(i)}</span>`).join('')}
       </div>
-      ${m.notes ? `<div class="hist-notes">💬 ${m.notes}</div>` : ''}
+      ${m.notes ? `<div class="hist-notes">💬 ${escapeHtml(m.notes)}</div>` : ''}
     </div>
   `).join('');
 }
 
 function deleteRecord(id) {
   if (!confirm('Apagar este registo?')) return;
+  const removed = appData.maintenances.find(m => m.id === id);
   appData.maintenances = appData.maintenances.filter(m => m.id !== id);
+  if (removed) revertChecklistFor(removed);
   saveData(appData);
   renderHistory();
   showToast('🗑 Registo apagado');
+}
+
+function recordItemIds(m) {
+  if (Array.isArray(m.itemIds)) return m.itemIds;
+  return (m.items || []).map(name => MAINTENANCE_ITEMS.find(i => i.name === name)?.id).filter(Boolean);
+}
+
+// Ao apagar um registo, repõe no checklist o registo anterior mais recente
+// (só se o estado atual tiver vindo do registo apagado).
+function revertChecklistFor(removed) {
+  recordItemIds(removed).forEach(itemId => {
+    const st = appData.checklistState[itemId];
+    if (!st || st.lastKm !== removed.km || st.lastDate !== removed.date) return;
+    const previous = appData.maintenances
+      .filter(m => recordItemIds(m).includes(itemId))
+      .sort((a, b) => (b.date || '').localeCompare(a.date || '') || b.km - a.km)[0];
+    if (previous) appData.checklistState[itemId] = { lastKm: previous.km, lastDate: previous.date, done: true };
+    else delete appData.checklistState[itemId];
+  });
 }
 
 // ---- INFO / PARTS / RESET ----
@@ -750,27 +776,64 @@ function switchInfoTab(tab) {
 function exportCSV() {
   if (!appData.maintenances.length) { showToast('⚠️ Sem dados para exportar'); return; }
   
+  // Separador ';' e vírgula decimal: é o que o Excel em português espera.
+  const cell = v => '"' + String(v ?? '').replace(/"/g, '""') + '"';
   const rows = [['Data','Quilometragem','Custo (€)','Oficina','Itens','Notas']];
   appData.maintenances.forEach(m => {
     rows.push([
-      m.date, m.km, m.cost || 0, m.garage || '',
-      '"' + m.items.join('; ') + '"',
-      '"' + (m.notes || '').replace(/"/g, "'") + '"'
+      m.date, m.km, (Number(m.cost) || 0).toFixed(2).replace('.', ','), m.garage || '',
+      (m.items || []).join(' | '), m.notes || ''
     ]);
   });
-  
-  const csv = rows.map(r => r.join(',')).join('\n');
+
+  const csv = rows.map(r => r.map(cell).join(';')).join('\r\n');
   const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url; a.download = `megane3_historico_${today()}.csv`;
-  a.click(); URL.revokeObjectURL(url);
+  a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
   showToast('✅ CSV exportado!');
+}
+
+// ---- BACKUP / RESTORE (JSON) ----
+function exportBackup() {
+  const blob = new Blob([JSON.stringify(appData, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `megane3_backup_${today()}.json`;
+  a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+  showToast('✅ Backup guardado!');
+}
+
+function importBackup(input) {
+  const file = input.files?.[0];
+  input.value = '';
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const data = JSON.parse(reader.result);
+      if (!data || typeof data !== 'object' || !Array.isArray(data.maintenances) || typeof data.checklistState !== 'object') throw new Error();
+      if (!confirm(`Restaurar backup com ${data.maintenances.length} registo(s)? Os dados atuais serão substituídos.`)) return;
+      appData = { ...defaultData, ...data, currentKm: parseInt(data.currentKm) || 0 };
+      saveData(appData);
+      renderHistory();
+      showToast('✅ Backup restaurado!');
+    } catch {
+      showToast('⚠️ Ficheiro de backup inválido');
+    }
+  };
+  reader.readAsText(file);
 }
 
 // ---- UTILS ----
 function today() {
-  return new Date().toISOString().split('T')[0];
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function escapeHtml(str) {
+  return String(str ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 
 function formatDate(dateStr) {

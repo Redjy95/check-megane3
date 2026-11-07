@@ -383,7 +383,7 @@
     </div>
     <div class="topbar-right">
       <div class="icon-btn" onclick="exportCSV()" title="Exportar CSV">📤</div>
-      <div class="icon-btn" onclick="showToast('Notificações ativas ✓')">🔔</div>
+      <div class="icon-btn" onclick="exportBackup()" title="Backup dos dados">💾</div>
     </div>
   </div>
 
@@ -505,6 +505,15 @@
           <div class="section-action" onclick="exportCSV()">Exportar CSV</div>
         </div>
         <div id="history-list"></div>
+        <div class="card mt-16">
+          <div class="card-title">Backup dos dados</div>
+          <div class="text-muted text-sm" style="margin-bottom:12px">Os dados ficam só neste dispositivo. Faça backup regularmente para não os perder.</div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn-sm btn-primary" style="flex:1" onclick="exportBackup()">💾 Fazer backup</button>
+            <button class="btn-sm btn-primary" style="flex:1" onclick="document.getElementById('backup-file').click()">📂 Restaurar</button>
+          </div>
+          <input type="file" id="backup-file" accept="application/json,.json" style="display:none" onchange="importBackup(this)" />
+        </div>
       </div>
     </div>
   </div>
