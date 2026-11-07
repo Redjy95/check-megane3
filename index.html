@@ -31,7 +31,7 @@
       --accent-yellow: #eab308;
       --text-primary: #f1f5f9;
       --text-secondary: #94a3b8;
-      --text-muted: #475569;
+      --text-muted: #8190a6;
       --font-display: 'Rajdhani', sans-serif;
       --font-body: 'Inter', sans-serif;
       --radius: 12px;
@@ -72,7 +72,7 @@
       background: linear-gradient(135deg, var(--accent-blue-bright), var(--accent-cyan));
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     }
-    .topbar-sub { font-size: 0.7rem; color: var(--text-muted); letter-spacing: 0.1em; text-transform: uppercase; }
+    .topbar-sub { font-size: 0.75rem; color: var(--text-muted); letter-spacing: 0.02em; }
     .topbar-right { display: flex; gap: 8px; }
     .icon-btn {
       width: 36px; height: 36px; border-radius: 50%;
@@ -96,8 +96,8 @@
       flex: 1; min-width: 0; display: flex; flex-direction: column;
       align-items: center; justify-content: center; gap: 4px;
       cursor: pointer; transition: all 0.2s;
-      position: relative; color: var(--text-muted); font-size: 0.62rem;
-      letter-spacing: 0.02em; text-transform: uppercase; font-weight: 500;
+      position: relative; color: var(--text-muted); font-size: 0.68rem;
+      letter-spacing: 0.01em; font-weight: 500;
       white-space: nowrap; text-align: center;
     }
     .nav-item svg { width: 20px; height: 20px; transition: all 0.2s; }
@@ -118,7 +118,7 @@
       transition: all 0.2s;
     }
     .card:hover { border-color: var(--border-bright); }
-    .card-title { font-family: var(--font-display); font-size: 0.8rem; font-weight: 600; color: var(--text-muted); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 12px; }
+    .card-title { font-family: var(--font-display); font-size: 0.8rem; font-weight: 600; color: var(--text-muted); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 12px; }
     /* ---- STATUS BADGES ---- */
     .badge {
       display: inline-flex; align-items: center; gap: 5px;
@@ -148,7 +148,7 @@
       background: radial-gradient(circle, rgba(37,99,235,0.2), transparent 70%);
       pointer-events: none;
     }
-    .km-label { font-size: 0.72rem; color: var(--text-muted); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 8px; }
+    .km-label { font-size: 0.72rem; color: var(--text-muted); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 8px; }
     .km-value {
       font-family: var(--font-display); font-size: 3.5rem; font-weight: 700;
       line-height: 1; letter-spacing: 0.02em;
@@ -205,8 +205,25 @@
       background: var(--bg-card); border: 1px solid var(--border);
       border-radius: var(--radius-sm); padding: 14px 12px; text-align: center;
     }
-    .stat-val { font-family: var(--font-display); font-size: 1.6rem; font-weight: 700; }
-    .stat-lbl { font-size: 0.7rem; color: var(--text-muted); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 4px; }
+    .stat-val { font-family: var(--font-display); font-size: 1.6rem; font-weight: 700; color: var(--text-primary); }
+    .stat-val.is-red { color: var(--accent-red); }
+    .stat-val.is-yellow { color: var(--accent-yellow); }
+    .stat-lbl { font-size: 0.78rem; color: var(--text-muted); margin-top: 4px; }
+    /* ---- HERO SUMMARY ---- */
+    .hero-summary { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 14px; }
+    .hero-summary:empty { display: none; }
+    .summary-pill {
+      display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
+      padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600;
+      border: 1px solid var(--border-bright); background: rgba(255,255,255,0.04); color: var(--text-primary);
+    }
+    .summary-pill .dot { width: 8px; height: 8px; border-radius: 50%; }
+    .summary-pill.red .dot { background: var(--accent-red); }
+    .summary-pill.yellow .dot { background: var(--accent-yellow); }
+    .summary-pill.green .dot { background: var(--accent-green); }
+    .icon-btn svg { width: 18px; height: 18px; }
+    #alerts-title { scroll-margin-top: calc(90px + env(safe-area-inset-top)); }
+    .brand-icon { width: 20px; height: 20px; vertical-align: -3px; margin-right: 6px; }
     /* ---- PROGRESS BAR ---- */
     .progress-wrap { margin-bottom: 6px; }
     .progress-header { display: flex; justify-content: space-between; font-size: 0.75rem; margin-bottom: 6px; color: var(--text-secondary); }
@@ -385,12 +402,12 @@
   <!-- TOPBAR -->
   <div class="topbar">
     <div>
-      <div class="topbar-brand">⚙ CHECK MÉGANE 3</div>
-      <div class="topbar-sub">Renault Mégane 3 · 1.5 dCi · K9K · 95cv</div>
+      <div class="topbar-brand"><svg class="brand-icon" viewBox="-160 -160 320 320" aria-hidden="true"><g fill="#3b82f6"><circle r="92" fill="none" stroke="#3b82f6" stroke-width="34"/><g transform="rotate(0)"><rect x="-22" y="-150" width="44" height="50" rx="8"/><rect x="-22" y="100" width="44" height="50" rx="8"/><rect x="-150" y="-22" width="50" height="44" rx="8"/><rect x="100" y="-22" width="50" height="44" rx="8"/></g><g transform="rotate(45)"><rect x="-22" y="-150" width="44" height="50" rx="8"/><rect x="-22" y="100" width="44" height="50" rx="8"/><rect x="-150" y="-22" width="50" height="44" rx="8"/><rect x="100" y="-22" width="50" height="44" rx="8"/></g></g><path d="M-40 4 l28 30 l58 -66" fill="none" stroke="#22c55e" stroke-width="30" stroke-linecap="round" stroke-linejoin="round"/></svg>CHECK MÉGANE 3</div>
+      <div class="topbar-sub">1.5 dCi · K9K · 95cv</div>
     </div>
     <div class="topbar-right">
-      <div class="icon-btn" onclick="exportCSV()" title="Exportar CSV">📤</div>
-      <div class="icon-btn" onclick="exportBackup()" title="Backup dos dados">💾</div>
+      <div class="icon-btn" onclick="exportCSV()" title="Exportar CSV" aria-label="Exportar CSV"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 00-2 2v14a2 2 0 002 2h12a2 2 0 002-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg></div>
+      <div class="icon-btn" onclick="exportBackup()" title="Backup dos dados" aria-label="Backup dos dados"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4"/><path d="M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg></div>
     </div>
   </div>
 
@@ -403,6 +420,7 @@
           <div class="km-label">Quilometragem Atual</div>
           <div class="km-value" id="km-display">—<span class="km-unit"> km</span></div>
           <div class="km-since" id="km-since-text">Atualize a quilometragem abaixo</div>
+          <div class="hero-summary" id="hero-summary"></div>
           <div class="km-input-row">
             <input type="number" class="km-input" id="km-input" placeholder="Ex: 125000" />
             <button class="btn-sm btn-primary" onclick="updateKm()">Atualizar</button>
@@ -412,26 +430,26 @@
         <!-- Stats Grid -->
         <div class="stats-grid">
           <div class="stat-card">
-            <div class="stat-val" id="stat-since-oil" style="color:var(--accent-cyan)">—</div>
-            <div class="stat-lbl">km desde óleo</div>
+            <div class="stat-val" id="stat-since-oil">—</div>
+            <div class="stat-lbl">desde a troca de óleo</div>
           </div>
           <div class="stat-card">
-            <div class="stat-val" id="stat-maintenance-count" style="color:var(--accent-green)">0</div>
-            <div class="stat-lbl">manutenções</div>
+            <div class="stat-val" id="stat-maintenance-count">0</div>
+            <div class="stat-lbl" id="stat-maintenance-label">manutenções</div>
           </div>
           <div class="stat-card">
-            <div class="stat-val" id="stat-next-service" style="color:var(--accent-yellow)">—</div>
-            <div class="stat-lbl">próx. revisão km</div>
+            <div class="stat-val" id="stat-next-service">—</div>
+            <div class="stat-lbl" id="stat-next-label">até à revisão</div>
           </div>
           <div class="stat-card">
-            <div class="stat-val" id="stat-total-cost" style="color:var(--accent-orange)">0€</div>
+            <div class="stat-val" id="stat-total-cost">0€</div>
             <div class="stat-lbl">custo total</div>
           </div>
         </div>
 
         <!-- Alerts -->
         <div class="section-header">
-          <div class="section-title">🚨 Alertas de Manutenção</div>
+          <div class="section-title" id="alerts-title">Alertas de Manutenção</div>
         </div>
         <div class="alert-list" id="alert-list">
           <div style="text-align:center;color:var(--text-muted);padding:24px;font-size:0.85rem;">
@@ -440,7 +458,7 @@
         </div>
 
         <!-- Belt Warning -->
-        <div class="warning-box mt-16">
+        <div class="warning-box mt-16" id="belt-warning" style="display:none">
           ⚠️ <strong>CORREIA DE DISTRIBUIÇÃO:</strong> Componente crítico do motor 1.5 dCi K9K. 
           Falha pode causar destruição total do motor. A Renault indica <strong>~120.000 km ou 5 anos</strong> — a app avisa aos 90.000 km por segurança.
         </div>
@@ -471,7 +489,7 @@
   <div id="screen-add" class="screen">
     <div class="scroll-content">
       <div class="page-pad">
-        <div class="section-title" style="margin-bottom:20px">📝 Registar Manutenção</div>
+        <div class="section-title" style="margin-bottom:20px">Registar Manutenção</div>
         <div class="form-group">
           <label class="form-label">Data</label>
           <input type="date" class="form-input" id="add-date" />
@@ -498,7 +516,7 @@
           <label class="form-label">Notas adicionais</label>
           <textarea class="form-textarea" id="add-notes" placeholder="Observações, próximas verificações, peças usadas..."></textarea>
         </div>
-        <button class="btn-full primary" onclick="saveMaintenance()">💾 Guardar Manutenção</button>
+        <button class="btn-full primary" onclick="saveMaintenance()">Guardar Manutenção</button>
       </div>
     </div>
   </div>
@@ -508,7 +526,7 @@
     <div class="scroll-content">
       <div class="page-pad">
         <div class="section-header">
-          <div class="section-title">📋 Histórico</div>
+          <div class="section-title">Histórico</div>
           <div class="section-action" onclick="exportCSV()">Exportar CSV</div>
         </div>
         <div id="history-list"></div>
@@ -516,8 +534,8 @@
           <div class="card-title">Backup dos dados</div>
           <div class="text-muted text-sm" style="margin-bottom:12px">Os dados ficam só neste dispositivo. Faça backup regularmente para não os perder.</div>
           <div style="display:flex;gap:8px;">
-            <button class="btn-sm btn-primary" style="flex:1" onclick="exportBackup()">💾 Fazer backup</button>
-            <button class="btn-sm btn-primary" style="flex:1" onclick="document.getElementById('backup-file').click()">📂 Restaurar</button>
+            <button class="btn-sm btn-primary" style="flex:1" onclick="exportBackup()">Fazer backup</button>
+            <button class="btn-sm btn-primary" style="flex:1" onclick="document.getElementById('backup-file').click()">Restaurar</button>
           </div>
           <input type="file" id="backup-file" accept="application/json,.json" style="display:none" onchange="importBackup(this)" />
         </div>
