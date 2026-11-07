@@ -1,6 +1,6 @@
 // ============================================================
 //  CHECK MÉGANE 3 — App Logic
-//  Renault Mégane 3 KZ1G · 1.5 dCi K9K 95cv · 2010
+//  Renault Mégane 3 Grand Tour KZ1G · 1.5 dCi K9K 110cv (81 kW) · 2010
 // ============================================================
 
 // ---- DATA MODEL ----
@@ -251,14 +251,14 @@ const RESET_STEPS = [
 ];
 
 const SPECS = [
-  { label: 'Motor', value: 'Renault K9K 796 / K9K 802' },
+  { label: 'Versão', value: 'Mégane III Grand Tour (KZ1G)' },
+  { label: 'Motor', value: 'Renault K9K (836 ou 846 — confirmar na chapa do motor)' },
   { label: 'Cilindrada', value: '1.461 cc (1.5 dCi)' },
-  { label: 'Potência', value: '95 cv (70 kW) @ 4.000 rpm' },
-  { label: 'Binário', value: '200 Nm @ 1.750–2.500 rpm' },
+  { label: 'Potência', value: '110 cv (81 kW) @ 4.000 rpm' },
+  { label: 'Binário', value: '~240 Nm @ 1.750 rpm' },
   { label: 'Alimentação', value: 'Injeção direta common rail' },
-  { label: 'Compressão', value: '15,4:1' },
   { label: 'Norma emissões', value: 'Euro 5' },
-  { label: 'Transmissão', value: 'Caixa manual (5 vel. JR5 ou 6 vel. TL4, consoante a versão)' },
+  { label: 'Transmissão', value: 'Caixa manual 6 velocidades (normalmente TL4 na versão 110 cv)' },
   { label: 'Caixa de óleo motor', value: '4,5L (com filtro)' },
   { label: 'Óleo da caixa de velocidades', value: '~2,1L SAE 75W-80' },
   { label: 'Sistema de arrefecimento', value: '~6L Glaceol RX Type D' },
