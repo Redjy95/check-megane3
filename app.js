@@ -23,7 +23,7 @@ const MAINTENANCE_ITEMS = [
     intervalKm: 15000,
     intervalMonths: 12,
     critical: false,
-    note: 'Óleo 5W-30 ACEA C3 Low SAPS · ~4,5 litros'
+    note: 'Óleo 5W-30 norma Renault RN0720 (ACEA C4) · ~4,5 litros'
   },
   {
     id: 'air_filter',
@@ -46,7 +46,7 @@ const MAINTENANCE_ITEMS = [
   {
     id: 'cabin_filter',
     category: 'motor',
-    name: 'Filtro do Habitáculo (Polen)',
+    name: 'Filtro do Habitáculo (Pólen)',
     intervalKm: 15000,
     intervalMonths: 12,
     critical: false,
@@ -57,10 +57,10 @@ const MAINTENANCE_ITEMS = [
     id: 'timing_belt',
     category: 'distribuicao',
     name: 'Correia de Distribuição + Roletes + Bomba de Água',
-    intervalKm: 60000,
+    intervalKm: 90000,
     intervalMonths: 60,
     critical: true,
-    note: '⚠️ CRÍTICO: Falha destroi o motor. Substituir SEMPRE com roletes e bomba. K9K usa correia banhada em óleo (não verificável visualmente).'
+    note: '⚠️ CRÍTICO: Falha destrói o motor. Substituir SEMPRE com roletes e bomba de água. A Renault indica ~120.000 km ou 5 anos; por segurança a app avisa aos 90.000 km. Confirmar no livro de manutenção.'
   },
   // Category: Fluidos
   {
@@ -117,7 +117,7 @@ const MAINTENANCE_ITEMS = [
     intervalKm: 5000,
     intervalMonths: 1,
     critical: false,
-    note: 'Dianteiros: 2.3 bar · Traseiros: 2.1 bar (a frio). Verificar estepe'
+    note: 'Dianteiros: 2.3 bar · Traseiros: 2.1 bar (a frio). Verificar o pneu sobressalente'
   },
   {
     id: 'tyre_rotation',
@@ -228,7 +228,7 @@ const CATEGORIES = {
 };
 
 const PARTS = [
-  { name: 'Óleo do Motor', spec: '5W-30 ACEA C3 Low SAPS', note: 'Recomendado: Elf Evolution Full-Tech FE 5W-30 ou Castrol Edge 5W-30 C3. Capacidade: 4,5L com filtro. NUNCA usar óleo fora da especificação ACEA C3 — danifica o filtro de partículas (FAP).' },
+  { name: 'Óleo do Motor', spec: '5W-30 Renault RN0720 (ACEA C4)', note: 'Recomendado: Elf Evolution Full-Tech FE 5W-30 ou outro 5W-30 com homologação RN0720. Capacidade: 4,5L com filtro. Nas versões com filtro de partículas (FAP) usar sempre óleo RN0720 — óleos fora da norma danificam o FAP. Confirmar no livro de manutenção.' },
   { name: 'Filtro de Óleo', spec: 'Mann-Filter HU 726/2 x ou OEM 8200768913', note: 'Chave de filtro 27mm. Torque de aperto: 25 Nm. Sempre substituir com o óleo.' },
   { name: 'Filtro de Ar', spec: 'Mann-Filter C 30 130 ou OEM 165461137R', note: 'Inspecionar a cada 15.000 km, substituir a cada 30.000 km ou se visualmente sujo.' },
   { name: 'Filtro de Combustível', spec: 'Mann-Filter WK 939/2 ou OEM 164005765R', note: 'Diesel — localizado no compartimento do motor. Purgar ar após substituição. Substituir com cada segundo troca de óleo.' },
@@ -238,7 +238,7 @@ const PARTS = [
   { name: 'Líquido de Refrigeração', spec: 'Glaceol RX Type D (azul) ou G11 compatível', note: 'Concentração 50/50 com água destilada. Capacidade total: ~6L. Verificar nível no reservatório mensalmente.' },
   { name: 'Velas de Incandescência', spec: 'Bosch 0 250 403 002 (M8x1) ou NGK Y-936AS', note: '4 velas. Torque: 8-12 Nm. Verificar resistência elétrica ~0,5-1 ohm.' },
   { name: 'Bateria', spec: '12V · 60Ah · 540A CCA · B13 (207×175×190mm)', note: 'Recomendar registo de código do rádio antes de desligar. Após substituição, pode ser necessário reinicialização eletrónica.' },
-  { name: 'Correia de Distribuição Kit', spec: 'OEM 7701476571 ou Gates TCK357WP1 (kit completo)', note: '⚠️ CRÍTICO: Comprar kit completo com roletes tensores, de encosto e bomba de água. Correia banhada em óleo — não limpar com desengordurantes.' },
+  { name: 'Correia de Distribuição Kit', spec: 'OEM 7701476571 ou Gates TCK357WP1 (kit completo)', note: '⚠️ CRÍTICO: Comprar kit completo com roletes tensores, de encosto e bomba de água. Correia seca (não banhada em óleo), protegida por uma tampa plástica — pode ser inspecionada visualmente.' },
 ];
 
 const RESET_STEPS = [
@@ -258,9 +258,9 @@ const SPECS = [
   { label: 'Alimentação', value: 'Injeção direta common rail' },
   { label: 'Compressão', value: '15,4:1' },
   { label: 'Norma emissões', value: 'Euro 5' },
-  { label: 'Transmissão', value: 'Caixa manual 6 velocidades (JR5/JH3)' },
+  { label: 'Transmissão', value: 'Caixa manual (5 vel. JR5 ou 6 vel. TL4, consoante a versão)' },
   { label: 'Caixa de óleo motor', value: '4,5L (com filtro)' },
-  { label: 'Caixa de câmbio', value: '~2,1L SAE 75W-80' },
+  { label: 'Óleo da caixa de velocidades', value: '~2,1L SAE 75W-80' },
   { label: 'Sistema de arrefecimento', value: '~6L Glaceol RX Type D' },
   { label: 'Depósito combustível', value: '60L' },
   { label: 'Pneus (standard)', value: '205/55 R16 ou 195/65 R15' },
@@ -530,9 +530,6 @@ function renderCheckItem(item) {
   if (status === 'overdue') statusClass = 'overdue';
   else if (status === 'warning') statusClass = 'warning';
   
-  let metaText = item.note;
-  if (state?.lastKm) metaText = `Último: ${state.lastKm.toLocaleString('pt-PT')} km${state.lastDate ? ' · ' + formatDate(state.lastDate) : ''} · ${metaText}`;
-  
   let badgeHtml = '';
   if (status === 'overdue') badgeHtml = '<span class="badge badge-red">VENCIDO</span>';
   else if (status === 'warning') badgeHtml = '<span class="badge badge-yellow">ATENÇÃO</span>';
@@ -629,7 +626,7 @@ function toggleCheckMini(el, id) {
   if (cb) cb.style.display = el.classList.contains('selected') ? 'block' : 'none';
 }
 
-function saveMainenance() {
+function saveMaintenance() {
   const date = document.getElementById('add-date').value;
   const km = parseInt(document.getElementById('add-km').value);
   const cost = parseFloat(document.getElementById('add-cost').value) || 0;
