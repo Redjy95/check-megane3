@@ -1,10 +1,10 @@
 // Check Mégane 3 — Service Worker (PWA Offline Support)
 // Mudar a versão sempre que os ficheiros da app mudarem.
-const CACHE = 'megane3-v5';
+const CACHE = 'megane3-v6';
 const ASSETS = ['./', './index.html', './app.js', './manifest.json', './icon-192.png', './icon-512.png', './icon-maskable-512.png', './apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS.map(u => new Request(u, { cache: 'reload' })))));
   self.skipWaiting();
 });
 
@@ -19,8 +19,13 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
   const sameOrigin = new URL(e.request.url).origin === self.location.origin;
+  // Ficheiros da app: pedir sempre ao servidor se há versão nova (ignora a cache
+  // de 10 min do GitHub Pages), para o HTML e o JS nunca ficarem desencontrados.
+  const req = sameOrigin
+    ? new Request(e.request.url, { cache: 'no-cache', credentials: 'same-origin' })
+    : e.request;
   e.respondWith(
-    fetch(e.request)
+    fetch(req)
       .then(res => {
         if (sameOrigin && res.ok) {
           const copy = res.clone();
