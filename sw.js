@@ -1,7 +1,7 @@
 // Check Mégane 3 — Service Worker (PWA Offline Support)
 // Mudar a versão sempre que os ficheiros da app mudarem.
-const CACHE = 'megane3-v7';
-const ASSETS = ['./', './index.html', './app.js', './manifest.json', './icon-192.png', './icon-512.png', './icon-maskable-512.png', './apple-touch-icon.png'];
+const CACHE = 'megane3-v8';
+const ASSETS = ['./', './index.html', './app.js', './obd.js', './manifest.json', './icon-192.png', './icon-512.png', './icon-maskable-512.png', './apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS.map(u => new Request(u, { cache: 'reload' })))));
