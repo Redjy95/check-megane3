@@ -553,6 +553,7 @@
           <div class="chip" id="tab-reset" onclick="switchInfoTab('reset')">Reset</div>
           <div class="chip" id="tab-specs" onclick="switchInfoTab('specs')">Especificações</div>
           <div class="chip" id="tab-car" onclick="switchInfoTab('car')">O meu carro</div>
+          <div class="chip" id="tab-obd" onclick="switchInfoTab('obd')">OBD</div>
         </div>
 
         <!-- Parts Tab -->
@@ -579,6 +580,45 @@
           <div class="step-item">
             <div class="step-num">C</div>
             <div class="step-text">Executar função <strong>"Oil Service Reset"</strong> ou <strong>"Maintenance Reset"</strong></div>
+          </div>
+        </div>
+
+        <!-- OBD Tab -->
+        <div id="tab-content-obd" style="display:none">
+          <div class="warning-box">⚠️ Usar só com o carro parado. Ligue a ignição (o motor pode estar desligado) antes de ligar.</div>
+          <div id="obd-unsupported" class="info-box" style="display:none">
+            Este browser não permite Bluetooth.<br>
+            <strong>iPhone:</strong> instale a app gratuita <strong>Bluefy</strong> (App Store) e abra este site lá.<br>
+            <strong>Android:</strong> abra no <strong>Chrome</strong>.<br>
+            O adaptador tem de ser Bluetooth LE (BLE).
+          </div>
+          <div id="obd-panel">
+            <button class="btn-full primary" id="obd-connect-btn" onclick="obdConnect()">Ligar ao adaptador OBD</button>
+            <div id="obd-status" class="text-sm" style="margin:10px 0 16px;color:var(--text-secondary)">Desligado</div>
+            <div id="obd-actions" style="display:none">
+              <div class="card">
+                <div class="card-title">Códigos de avaria</div>
+                <div id="obd-dtcs" class="text-sm" style="margin-bottom:12px"><span class="text-muted">Ainda não lido</span></div>
+                <div style="display:flex;gap:8px">
+                  <button class="btn-sm btn-primary" style="flex:1" onclick="obdReadDtcs()">Ler avarias</button>
+                  <button class="btn-sm btn-outline" style="flex:1" onclick="obdClearDtcs()">Apagar avarias</button>
+                </div>
+              </div>
+              <div class="card mt-16">
+                <div class="card-title">Dados em tempo real</div>
+                <div id="obd-live" class="text-sm" style="margin-bottom:12px"><span class="text-muted">Ainda não lido</span></div>
+                <button class="btn-sm btn-primary" style="width:100%" onclick="obdReadLive()">Ler bateria e motor</button>
+              </div>
+              <div class="card mt-16">
+                <div class="card-title">Quilometragem</div>
+                <div id="obd-km" class="text-sm" style="margin-bottom:12px"><span class="text-muted">Muitos carros de 2010 não enviam o conta-km pelo OBD. Vale a pena tentar.</span></div>
+                <button class="btn-sm btn-primary" style="width:100%" onclick="obdReadOdometer()">Tentar ler km</button>
+              </div>
+              <details class="mt-16">
+                <summary class="text-muted text-sm" style="cursor:pointer">Registo técnico (respostas do adaptador)</summary>
+                <pre id="obd-log" style="white-space:pre-wrap;font-size:0.7rem;color:var(--text-secondary);background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:10px;margin-top:8px;max-height:240px;overflow:auto"></pre>
+              </details>
+            </div>
           </div>
         </div>
 
@@ -663,5 +703,6 @@
 <div class="toast" id="toast"></div>
 
 <script src="app.js"></script>
+<script src="obd.js"></script>
 </body>
 </html>

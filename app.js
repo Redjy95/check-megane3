@@ -915,7 +915,8 @@ function renderInfo() {
 }
 
 function switchInfoTab(tab) {
-  ['parts','reset','specs','car'].forEach(t => {
+  if (tab === 'obd' && typeof obdInitUI === 'function') obdInitUI();
+  ['parts','reset','specs','car','obd'].forEach(t => {
     document.getElementById('tab-content-' + t).style.display = t === tab ? 'block' : 'none';
     document.getElementById('tab-' + t).classList.toggle('active', t === tab);
   });
