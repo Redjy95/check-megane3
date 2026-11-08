@@ -474,15 +474,15 @@ function renderDashboard() {
   
   // KM display
   document.getElementById('km-display').innerHTML = km ? 
-    `${km.toLocaleString('pt-PT')}<span class="km-unit"> km</span>` : 
+    `${fmtNum(km)}<span class="km-unit"> km</span>` : 
     `—<span class="km-unit"> km</span>`;
 
   // Since oil
   const oilState = appData.checklistState['oil_change'];
   if (oilState && oilState.lastKm) {
     const since = km - oilState.lastKm;
-    document.getElementById('stat-since-oil').textContent = since.toLocaleString('pt-PT') + ' km';
-    document.getElementById('km-since-text').textContent = `${since.toLocaleString('pt-PT')} km desde última troca de óleo`;
+    document.getElementById('stat-since-oil').textContent = fmtNum(since) + ' km';
+    document.getElementById('km-since-text').textContent = `${fmtNum(since)} km desde última troca de óleo`;
   } else {
     document.getElementById('stat-since-oil').textContent = '—';
     document.getElementById('km-since-text').textContent = 'Registe a última troca de óleo no Checklist';
@@ -492,7 +492,7 @@ function renderDashboard() {
   document.getElementById('stat-maintenance-count').textContent = appData.maintenances.length;
   document.getElementById('stat-maintenance-label').textContent = appData.maintenances.length === 1 ? 'manutenção' : 'manutenções';
   const totalCost = appData.maintenances.reduce((s, m) => s + (parseFloat(m.cost) || 0), 0);
-  document.getElementById('stat-total-cost').textContent = totalCost.toFixed(0) + '€';
+  document.getElementById('stat-total-cost').textContent = fmtNum(totalCost) + '€';
 
   // Next service: km em falta (ou em atraso), com cor só quando há problema
   const oilItem = MAINTENANCE_ITEMS.find(i => i.id === 'oil_change');
@@ -504,17 +504,17 @@ function renderDashboard() {
     nextEl.textContent = '—';
     nextLbl.textContent = 'até à revisão';
   } else if (oilRemaining < 0) {
-    nextEl.textContent = Math.abs(oilRemaining).toLocaleString('pt-PT') + ' km';
+    nextEl.textContent = fmtNum(Math.abs(oilRemaining)) + ' km';
     nextLbl.textContent = 'revisão em atraso';
     nextEl.classList.add('is-red');
   } else {
-    nextEl.textContent = oilRemaining.toLocaleString('pt-PT') + ' km';
+    nextEl.textContent = fmtNum(oilRemaining) + ' km';
     nextLbl.textContent = 'até à revisão';
     if (oilRemaining <= oilItem.intervalKm * 0.15) nextEl.classList.add('is-yellow');
   }
 
   // Placeholder com o km atual
-  document.getElementById('km-input').placeholder = km ? km.toLocaleString('pt-PT') : 'Ex: 125000';
+  document.getElementById('km-input').placeholder = km ? fmtNum(km) : 'Ex: 125000';
 
   // Aviso da correia só quando está perto do prazo, em atraso ou sem dados
   const beltStatus = getItemStatus(MAINTENANCE_ITEMS.find(i => i.id === 'timing_belt'));
@@ -560,14 +560,14 @@ function renderAlerts() {
     
     if (status === 'overdue') {
       let detail = 'Manutenção em atraso';
-      if (remaining !== null) detail = `${Math.abs(remaining).toLocaleString('pt-PT')} km em atraso`;
+      if (remaining !== null) detail = `${fmtNum(Math.abs(remaining))} km em atraso`;
       alerts.push({ item, status: 'red', detail, priority: 1 });
     } else if (status === 'warning') {
       let detail = 'Aproximando-se do intervalo';
-      if (remaining !== null) detail = `Restam ~${remaining.toLocaleString('pt-PT')} km`;
+      if (remaining !== null) detail = `Restam ~${fmtNum(remaining)} km`;
       alerts.push({ item, status: 'yellow', detail, priority: 2 });
     } else if (status === 'ok') {
-      if (remaining !== null) alerts.push({ item, status: 'green', detail: `Restam ${remaining.toLocaleString('pt-PT')} km`, priority: 3 });
+      if (remaining !== null) alerts.push({ item, status: 'green', detail: `Restam ${fmtNum(remaining)} km`, priority: 3 });
     } else if (!state || !state.lastKm) {
       alerts.push({ item, status: 'yellow', detail: 'Sem dados — registar última manutenção', priority: 2 });
     }
@@ -611,7 +611,7 @@ function renderServiceProgress() {
       pct = Math.min(100, (used / item.intervalKm) * 100);
       color = pct >= 100 ? 'red' : pct >= 85 ? 'yellow' : 'green';
       const remaining = item.intervalKm - used;
-      detail = pct >= 100 ? `${Math.abs(remaining).toLocaleString('pt-PT')} km em atraso` : `Restam ${remaining.toLocaleString('pt-PT')} km`;
+      detail = pct >= 100 ? `${fmtNum(Math.abs(remaining))} km em atraso` : `Restam ${fmtNum(remaining)} km`;
     }
     
     return `
@@ -686,7 +686,7 @@ function renderCheckItem(item) {
   else if (status === 'ok') badgeHtml = '<span class="badge badge-green">OK</span>';
   else badgeHtml = '<span class="badge" style="border:1px solid var(--border);color:var(--text-muted);font-size:0.65rem">SEM DADOS</span>';
   
-  const kmInfo = item.intervalKm ? `A cada ${item.intervalKm.toLocaleString('pt-PT')} km${item.intervalMonths ? ` ou ${item.intervalMonths} meses` : ''}` : `A cada ${item.intervalMonths} meses`;
+  const kmInfo = item.intervalKm ? `A cada ${fmtNum(item.intervalKm)} km${item.intervalMonths ? ` ou ${item.intervalMonths} meses` : ''}` : `A cada ${item.intervalMonths} meses`;
   
   return `
     <div class="check-item ${statusClass}" onclick="openCheckModal('${item.id}')">
@@ -695,7 +695,7 @@ function renderCheckItem(item) {
       </div>
       <div class="check-info">
         <div class="check-name">${item.name}</div>
-        <div class="check-meta">${kmInfo}${remaining !== null ? ` · Restam ${remaining > 0 ? remaining.toLocaleString('pt-PT') : '0'} km` : ''}</div>
+        <div class="check-meta">${kmInfo}${remaining !== null ? ` · Restam ${remaining > 0 ? fmtNum(remaining) : '0'} km` : ''}</div>
         ${item.critical ? `<div class="check-critical">⚠️ COMPONENTE CRÍTICO — NÃO IGNORAR</div>` : ''}
       </div>
       <div class="check-badge">${badgeHtml}</div>
@@ -730,7 +730,7 @@ function openCheckModal(itemId) {
           <input type="date" class="form-input" id="modal-date" value="${state.lastDate || today()}" />
         </div>
       </div>
-      ${item.intervalKm ? `<div class="text-muted text-sm" style="margin-bottom:12px">Próxima: ${((state.lastKm || appData.currentKm) + item.intervalKm).toLocaleString('pt-PT')} km (estimativa)</div>` : ''}
+      ${item.intervalKm ? `<div class="text-muted text-sm" style="margin-bottom:12px">Próxima: ${fmtNum(((state.lastKm || appData.currentKm) + item.intervalKm))} km (estimativa)</div>` : ''}
       <button class="btn-full primary" onclick="saveCheckState('${itemId}')">Guardar</button>
     </div>
   `;
@@ -840,7 +840,7 @@ function renderHistory() {
       <div class="hist-header">
         <div>
           <div class="hist-date">${formatDate(m.date)}</div>
-          <div class="hist-km">📍 ${m.km.toLocaleString('pt-PT')} km${m.garage ? ` · ${escapeHtml(m.garage)}` : ''}</div>
+          <div class="hist-km">📍 ${fmtNum(m.km)} km${m.garage ? ` · ${escapeHtml(m.garage)}` : ''}</div>
         </div>
         <div style="text-align:right">
           <div class="hist-cost">${m.cost ? Number(m.cost).toFixed(2) + '€' : '—'}</div>
@@ -981,6 +981,12 @@ function importBackup(input) {
 function today() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+// Separa sempre os milhares com espaço (o pt-PT não separa números de 4 algarismos: 5258)
+function fmtNum(n) {
+  const v = Math.round(Number(n) || 0);
+  return (v < 0 ? '-' : '') + String(Math.abs(v)).replace(/\B(?=(\d{3})+(?!\d))/g, '\u00A0');
 }
 
 function escapeHtml(str) {
