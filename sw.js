@@ -8,9 +8,10 @@ self.addEventListener('install', e => {
   self.skipWaiting();
 });
 
+// Só apaga caches antigas desta app (a app OBD megane3-obd está no mesmo domínio github.io)
 self.addEventListener('activate', e => {
   e.waitUntil(caches.keys().then(keys =>
-    Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
+    Promise.all(keys.filter(k => k.startsWith('megane3-') && k !== CACHE).map(k => caches.delete(k)))
   ));
   self.clients.claim();
 });
