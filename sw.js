@@ -1,6 +1,6 @@
 // Check Mégane 3 — Service Worker (PWA Offline Support)
 // Mudar a versão sempre que os ficheiros da app mudarem.
-const CACHE = 'megane3-v9';
+const CACHE = 'megane3-v10';
 const ASSETS = ['./', './index.html', './app.js', './obd.js', './manifest.json', './icon-192.png', './icon-512.png', './icon-maskable-512.png', './apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
@@ -11,7 +11,7 @@ self.addEventListener('install', e => {
 // Só apaga caches antigas desta app (a app OBD megane3-obd está no mesmo domínio github.io)
 self.addEventListener('activate', e => {
   e.waitUntil(caches.keys().then(keys =>
-    Promise.all(keys.filter(k => k.startsWith('megane3-') && k !== CACHE).map(k => caches.delete(k)))
+    Promise.all(keys.filter(k => /^megane3-v\d+$/.test(k) && k !== CACHE).map(k => caches.delete(k)))
   ));
   self.clients.claim();
 });

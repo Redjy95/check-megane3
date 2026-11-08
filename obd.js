@@ -207,8 +207,8 @@ async function obdReadOdometer() {
     const odo = obdBytes(await obdSend('01A6'), 1, 0xa6);
     if (odo && odo.length >= 4) {
       const km = Math.round(((odo[0] << 24 >>> 0) + (odo[1] << 16) + (odo[2] << 8) + odo[3]) / 10);
-      el.innerHTML = `Conta-km: <strong>${km.toLocaleString('pt-PT')} km</strong>`;
-      if (km > 0 && confirm(`O carro indica ${km.toLocaleString('pt-PT')} km. Atualizar a quilometragem da app?`)) {
+      el.innerHTML = `Conta-km: <strong>${fmtNum(km)} km</strong>`;
+      if (km > 0 && confirm(`O carro indica ${fmtNum(km)} km. Atualizar a quilometragem da app?`)) {
         appData.currentKm = km;
         saveData(appData);
         showToast('✅ Quilometragem atualizada!');
@@ -216,7 +216,7 @@ async function obdReadOdometer() {
       return;
     }
     const dist = obdBytes(await obdSend('0131'), 1, 0x31);
-    const distTxt = dist && dist.length >= 2 ? ` Distância desde a última limpeza de avarias: ${(dist[0] * 256 + dist[1]).toLocaleString('pt-PT')} km.` : '';
+    const distTxt = dist && dist.length >= 2 ? ` Distância desde a última limpeza de avarias: ${fmtNum((dist[0] * 256 + dist[1]))} km.` : '';
     el.innerHTML = `<span style="color:var(--accent-yellow)">O carro não fornece o conta-km pelo OBD standard${support ? '' : ' (PID A6 não suportado)'}.</span>${distTxt}`;
   });
 }
@@ -271,7 +271,7 @@ function obdShowLive(d) {
   document.getElementById('obd-live').innerHTML =
     row('Bateria', batt) +
     row('Temperatura do motor', d.coolant !== undefined ? d.coolant + ' °C' : '—') +
-    row('Rotações', d.rpm !== undefined ? d.rpm.toLocaleString('pt-PT') + ' rpm' : '—') +
+    row('Rotações', d.rpm !== undefined ? fmtNum(d.rpm) + ' rpm' : '—') +
     row('Velocidade', d.speed !== undefined ? d.speed + ' km/h' : '—');
 }
 
